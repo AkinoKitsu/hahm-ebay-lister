@@ -54,6 +54,7 @@ export type ItemStatus = "idle" | "writing" | "done" | "error";
 
 export interface ItemGroup {
   id: string;
+  sku: string; // bin reference, e.g. "K75-A"
   name: string;
   photoIds: string[];
   listing?: ListingResult;

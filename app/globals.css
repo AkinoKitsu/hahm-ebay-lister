@@ -585,6 +585,47 @@ textarea {
   font-family: var(--font-display);
 }
 
+.board-sku {
+  flex: 0 0 auto;
+  width: 8.5ch;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  text-transform: uppercase;
+  color: var(--color-accent-deep);
+  background: var(--color-accent-soft);
+  border-color: color-mix(in oklch, var(--color-accent), white 60%);
+}
+
+.bin-field {
+  margin-bottom: 1.25rem;
+}
+
+.bin-field input {
+  max-width: 220px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-ink-faint);
+  max-width: 52ch;
+}
+
+.sku-tag {
+  display: inline-block;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-accent-deep);
+  background: var(--color-accent-soft);
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  margin-right: 0.45rem;
+  vertical-align: middle;
+}
+
 .board-empty {
   color: var(--color-ink-faint);
   font-size: 0.88rem;

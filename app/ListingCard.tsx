@@ -68,7 +68,10 @@ export function ListingCard({
           <img className="listing-cover" src={cover.previewUrl} alt="" />
         )}
         <div className="listing-card-title">
-          <strong>{listing?.title || group.name}</strong>
+          <strong>
+            {group.sku && <span className="sku-tag">{group.sku}</span>}
+            {listing?.title || group.name}
+          </strong>
           <span className="listing-card-sub">
             {group.status === "writing" && (
               <>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { resizeImage } from "@/lib/resize";
+import { buildSku } from "@/lib/sku";
 import { ReviewBoard } from "./ReviewBoard";
 import { ListingsView } from "./ListingsView";
 import type {
@@ -40,6 +41,7 @@ async function runPool<T>(
 
 export default function Home() {
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [binPrefix, setBinPrefix] = useState("");
   const [step, setStep] = useState<Step>("upload");
   const [groups, setGroups] = useState<ItemGroup[]>([]);
   const [orphanIds, setOrphanIds] = useState<string[]>([]);
@@ -111,10 +113,16 @@ export default function Home() {
       }
       const idxToId = (i: number) => photos[i]?.id;
       const assigned = new Set<string>();
-      const nextGroups: ItemGroup[] = data.groups.map((g) => {
+      const nextGroups: ItemGroup[] = data.groups.map((g, i) => {
         const ids = g.photoIndices.map(idxToId).filter(Boolean) as string[];
         ids.forEach((id) => assigned.add(id));
-        return { id: newId(), name: g.name, photoIds: ids, status: "idle" };
+        return {
+          id: newId(),
+          sku: buildSku(binPrefix, i),
+          name: g.name,
+          photoIds: ids,
+          status: "idle",
+        };
       });
       const orphans = (data.orphanIndices ?? [])
         .map(idxToId)
@@ -136,6 +144,11 @@ export default function Home() {
   const rename = (groupId: string, name: string) =>
     setGroups((prev) =>
       prev.map((g) => (g.id === groupId ? { ...g, name } : g))
+    );
+
+  const renameSku = (groupId: string, sku: string) =>
+    setGroups((prev) =>
+      prev.map((g) => (g.id === groupId ? { ...g, sku } : g))
     );
 
   const movePhoto = (photoId: string, toGroupId: string | "orphans") => {
@@ -168,7 +181,13 @@ export default function Home() {
   const addGroup = () =>
     setGroups((prev) => [
       ...prev,
-      { id: newId(), name: `new-item-${prev.length + 1}`, photoIds: [], status: "idle" },
+      {
+        id: newId(),
+        sku: buildSku(binPrefix, prev.length),
+        name: `new-item-${prev.length + 1}`,
+        photoIds: [],
+        status: "idle",
+      },
     ]);
 
   // ── Write listings ──────────────────────────────────────
@@ -267,6 +286,28 @@ export default function Home() {
               1 · Add all your photos
             </h2>
 
+            <div className="field bin-field">
+              <label htmlFor="bin">
+                Bin / SKU code{" "}
+                <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
+                  (where these items are stored)
+                </span>
+              </label>
+              <input
+                id="bin"
+                type="text"
+                placeholder="e.g. K75"
+                value={binPrefix}
+                onChange={(e) => setBinPrefix(e.target.value)}
+                autoCapitalize="characters"
+              />
+              <span className="field-hint">
+                Each item gets {binPrefix ? `${binPrefix.trim()}-A, ${binPrefix.trim()}-B` : "A, B, C"}
+                … in order, so you can find it in the bin later. You can edit any
+                SKU after sorting.
+              </span>
+            </div>
+
             <div
               className={`dropzone${dragging ? " dragging" : ""}`}
               role="button"
@@ -363,6 +404,7 @@ export default function Home() {
           orphanIds={orphanIds}
           photoById={photoById}
           onRename={rename}
+          onRenameSku={renameSku}
           onMovePhoto={movePhoto}
           onDeleteGroup={deleteGroup}
           onAddGroup={addGroup}

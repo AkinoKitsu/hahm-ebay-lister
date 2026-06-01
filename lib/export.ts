@@ -36,14 +36,16 @@ const CSV_COLUMNS: { header: string; get: (l: ListingResult) => string }[] = [
 // open in Numbers/Excel or adapt.
 export function listingsToCsv(groups: ItemGroup[]): string {
   const done = groups.filter((g) => g.listing);
-  const headerRow = ["Item Folder", ...CSV_COLUMNS.map((c) => c.header)]
+  const headerRow = ["SKU", "Item Name", ...CSV_COLUMNS.map((c) => c.header)]
     .map(csvCell)
     .join(",");
   const rows = done.map((g) => {
     const l = g.listing as ListingResult;
-    return [csvCell(g.name), ...CSV_COLUMNS.map((c) => csvCell(c.get(l)))].join(
-      ","
-    );
+    return [
+      csvCell(g.sku),
+      csvCell(g.name),
+      ...CSV_COLUMNS.map((c) => csvCell(c.get(l))),
+    ].join(",");
   });
   return [headerRow, ...rows].join("\r\n");
 }
@@ -51,7 +53,7 @@ export function listingsToCsv(groups: ItemGroup[]): string {
 export function listingsToJson(groups: ItemGroup[]): string {
   const payload = groups
     .filter((g) => g.listing)
-    .map((g) => ({ folder: g.name, ...g.listing }));
+    .map((g) => ({ sku: g.sku, folder: g.name, ...g.listing }));
   return JSON.stringify(payload, null, 2);
 }
 
