@@ -34,9 +34,43 @@ own eBay developer keys, so you're in full control and there's no middleman.
 3. **A Vercel account** — free hosting. <https://vercel.com/>
 4. **Node.js** installed on your computer — <https://nodejs.org/> (the "LTS" version).
 
+> There are two ways to set this up. **Not a coder? Use the Quick Start.**
+> Comfortable in a terminal? Skip to *Setup for developers*.
+
 ---
 
-## Setup, step by step
+## 🚀 Quick Start (no coding required)
+
+You can get your own copy running without ever opening a terminal.
+
+**1. Make your free accounts and grab your keys.**
+   - Anthropic key at <https://console.anthropic.com/> → "API Keys" → create one (starts with `sk-ant-`).
+   - eBay developer keyset at <https://developer.ebay.com/> (do this part later if you only want to write listings, not post them).
+   - A Vercel account at <https://vercel.com/> — sign up **with GitHub** (it'll make a free GitHub account too if you don't have one).
+
+**2. Deploy your own copy in a few clicks.**
+   Click the button (it copies this project to your own GitHub and deploys it on Vercel):
+
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/YOUR-USERNAME/ebay-lister-web)
+
+   When Vercel asks for **Environment Variables**, paste in at least your
+   `ANTHROPIC_API_KEY`. (You can add the eBay ones later.) Click **Deploy** and
+   wait about a minute — you'll get a web address like
+   `https://your-app.vercel.app`.
+
+**3. Bookmark your app** on your computer and add it to your phone's home
+   screen. You can start sorting and writing listings immediately.
+
+**4. To enable posting to eBay** (optional), follow *Set up eBay posting* below
+   using your new web address, then add the eBay values in
+   **Vercel → your project → Settings → Environment Variables** and redeploy.
+
+That's it — no terminal, no code editing. Everything else below is for people
+who want to run it locally or tinker.
+
+---
+
+## Setup for developers (command line)
 
 ### 1. Get the code
 ```bash
@@ -104,6 +138,27 @@ Vercel only.
 ---
 
 ## How it works (for the curious)
+
+```mermaid
+flowchart TD
+    U["🧑 You — browser / phone<br/>(photos resized client-side)"]
+    subgraph V["Your app on Vercel (Next.js)"]
+        S["/api/sort<br/>group → verify → un-split"]
+        A["/api/analyze<br/>write one listing"]
+        E["/api/ebay/*<br/>connect + publish"]
+        C[["🔒 encrypted cookie<br/>(eBay refresh token)"]]
+    end
+    AN["Anthropic API<br/>(your key)"]
+    EB["eBay APIs<br/>(your developer keys)"]
+
+    U -->|"all photos (thumbnails)"| S
+    U -->|"one item's photos"| A
+    U -->|"post listing"| E
+    S --> AN
+    A --> AN
+    E <--> C
+    E -->|"upload photos · inventory → offer → publish"| EB
+```
 
 - **Frontend** (`app/`): the upload → sort → review → write → post wizard.
   Photos are shrunk in your browser before upload.
