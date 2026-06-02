@@ -51,7 +51,7 @@ You can get your own copy running without ever opening a terminal.
 **2. Deploy your own copy in a few clicks.**
    Click the button (it copies this project to your own GitHub and deploys it on Vercel):
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ashnicholes-droid/ebay-lister-web)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ashnicholes-droid/hahm-ebay-lister)
 
    When Vercel asks for **Environment Variables**, paste in at least your
    `ANTHROPIC_API_KEY`. (You can add the eBay ones later.) Click **Deploy** and
@@ -74,8 +74,8 @@ who want to run it locally or tinker.
 
 ### 1. Get the code
 ```bash
-git clone https://github.com/ashnicholes-droid/ebay-lister-web.git
-cd ebay-lister-web
+git clone https://github.com/ashnicholes-droid/hahm-ebay-lister.git
+cd hahm-ebay-lister
 npm install
 ```
 
