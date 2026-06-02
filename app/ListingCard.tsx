@@ -5,10 +5,25 @@ import type { ItemGroup, ListingResult, Photo } from "@/lib/types";
 
 const TITLE_LIMIT = 80;
 
+// eBay's pre-owned condition tiers, matching the values the model returns.
+const CONDITIONS: { value: string; label: string }[] = [
+  { value: "NEW_WITH_TAGS", label: "New with tags" },
+  { value: "NEW_NO_TAGS", label: "New without tags" },
+  { value: "EXCELLENT", label: "Pre-owned · Excellent" },
+  { value: "VERY_GOOD", label: "Pre-owned · Very good" },
+  { value: "GOOD", label: "Pre-owned · Good" },
+  { value: "ACCEPTABLE", label: "Pre-owned · Acceptable" },
+];
+
 function formatPrice(value: ListingResult["suggested_price"]): string {
   const n = typeof value === "string" ? parseFloat(value) : value;
   if (n === undefined || Number.isNaN(n)) return "$0.00";
   return `$${n.toFixed(2)}`;
+}
+
+function priceToInput(value: ListingResult["suggested_price"]): string {
+  const n = typeof value === "string" ? parseFloat(value) : value;
+  return n === undefined || Number.isNaN(n) ? "" : String(n);
 }
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -128,13 +143,50 @@ export function ListingCard({
           </div>
 
           <div className="meta-row">
-            <div className="stat">
-              <div className="k">Price</div>
-              <div className="v price">{formatPrice(listing.suggested_price)}</div>
+            <div className="stat editable">
+              <label className="k" htmlFor={`price-${group.id}`}>
+                Price
+              </label>
+              <div className="price-input">
+                <span aria-hidden="true">$</span>
+                <input
+                  id={`price-${group.id}`}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={priceToInput(listing.suggested_price)}
+                  onChange={(e) =>
+                    onEdit(group.id, {
+                      suggested_price:
+                        e.target.value === "" ? "" : Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
             </div>
-            <div className="stat">
-              <div className="k">Condition</div>
-              <div className="v">{(listing.condition ?? "—").replace(/_/g, " ")}</div>
+            <div className="stat editable">
+              <label className="k" htmlFor={`cond-${group.id}`}>
+                Condition
+              </label>
+              <select
+                id={`cond-${group.id}`}
+                value={listing.condition ?? "GOOD"}
+                onChange={(e) => onEdit(group.id, { condition: e.target.value })}
+              >
+                {/* Keep an unexpected model value selectable rather than losing it. */}
+                {listing.condition &&
+                  !CONDITIONS.some((c) => c.value === listing.condition) && (
+                    <option value={listing.condition}>
+                      {listing.condition.replace(/_/g, " ")}
+                    </option>
+                  )}
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
             </div>
             {listing.brand && (
               <div className="stat">
