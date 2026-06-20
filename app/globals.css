@@ -968,6 +968,15 @@ textarea {
 @media (max-width: 560px) {
   .model-settings-body {
     grid-template-columns: 1fr;
+    /* Reset order so the panel sits between the toggle and Sort button
+       (DOM order) rather than after the Sort button (order:99 desktop). */
+    order: 0;
+  }
+
+  .result-actions .btn-primary {
+    margin-left: 0;
+    flex: 0 0 100%;
+    justify-content: center;
   }
 }
 
