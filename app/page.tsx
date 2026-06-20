@@ -365,7 +365,6 @@ export default function Home() {
       </header>
 
       <EbayConnect />
-      <ModelSelector />
 
       {step === "upload" && (
         <>
@@ -459,6 +458,7 @@ export default function Home() {
             )}
 
             <div className="result-actions" style={{ borderTop: "none", paddingTop: 0 }}>
+              <ModelSelector />
               <button
                 type="button"
                 className="btn btn-primary"

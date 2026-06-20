@@ -30,7 +30,6 @@ export function ModelSelector() {
       .then((data: ModelsPayload) => {
         setModels(data);
 
-        // Resolve displayed sort model: saved pref if still in the list, else default.
         const defaultSort =
           data.sortModels.find((m) => m.isDefault)?.id ?? data.sortModels[0]?.id ?? "";
         setSortModel(
@@ -39,7 +38,6 @@ export function ModelSelector() {
             : defaultSort
         );
 
-        // Same for analysis model.
         const defaultAnalysis =
           data.analysisModels.find((m) => m.isDefault)?.id ??
           data.analysisModels[0]?.id ??
@@ -71,24 +69,22 @@ export function ModelSelector() {
   const analysisDesc = models?.analysisModels.find((m) => m.id === analysisModel)?.description;
 
   return (
-    <div className="model-selector-bar">
+    <>
       <button
         type="button"
-        className="model-selector-toggle"
+        className="btn btn-ghost model-settings-btn"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-controls="model-selector-body"
+        aria-controls="model-settings-body"
       >
-        <span>⚙ Model Settings</span>
-        <span className="chevron" aria-hidden="true">
-          {open ? "▲" : "▼"}
-        </span>
+        ⚙ Model Settings{" "}
+        <span aria-hidden="true">{open ? "▲" : "▼"}</span>
       </button>
 
       {open && (
-        <div id="model-selector-body" className="model-selector-body">
+        <div id="model-settings-body" className="model-settings-body">
           {loadError && (
-            <p className="note note-error" style={{ margin: "0 0 1rem" }}>
+            <p className="note note-error" style={{ margin: 0, gridColumn: "1 / -1" }}>
               Couldn&rsquo;t load the model list — the app will use its defaults.
             </p>
           )}
@@ -142,6 +138,6 @@ export function ModelSelector() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
