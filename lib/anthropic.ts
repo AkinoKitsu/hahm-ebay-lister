@@ -30,3 +30,43 @@ export function parseModelJson<T = unknown>(raw: string): T {
     throw new Error("Model did not return valid JSON.");
   }
 }
+
+// ── Account-level Anthropic failures ─────────────────────────────────────────
+// A bad/missing key, missing model access, or exhausted credits makes EVERY
+// call fail, so retrying or degrading is pointless — it just surfaces a vague
+// error. Detect these and throw a typed error so routes can show the real cause.
+export class AnthropicAuthError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AnthropicAuthError";
+    this.status = status;
+  }
+}
+
+export function anthropicAuthError(e: unknown): AnthropicAuthError | null {
+  const status =
+    e && typeof e === "object" && "status" in e
+      ? Number((e as { status?: number }).status)
+      : undefined;
+  const message =
+    e && typeof e === "object" && "message" in e
+      ? String((e as { message?: unknown }).message ?? "")
+      : "";
+  if (status === 401)
+    return new AnthropicAuthError(
+      "Anthropic rejected your API key (401). Check that ANTHROPIC_API_KEY is set correctly in your environment variables.",
+      401
+    );
+  if (status === 403)
+    return new AnthropicAuthError(
+      "Your Anthropic API key isn't permitted to use this model (403). Check the key's access in the Anthropic Console.",
+      403
+    );
+  if (status === 402 || /credit balance|too low|billing|payment|insufficient|quota/i.test(message))
+    return new AnthropicAuthError(
+      "Your Anthropic account can't cover this request — add credits/billing in the Anthropic Console, then try again.",
+      402
+    );
+  return null;
+}

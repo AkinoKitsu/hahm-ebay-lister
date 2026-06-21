@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
-import { getClient, parseModelJson } from "@/lib/anthropic";
+import { getClient, parseModelJson, AnthropicAuthError, anthropicAuthError } from "@/lib/anthropic";
 import { guardApiRequest, safeErrorResponse } from "@/lib/api-guard";
 import {
   PROFILE_ROUTER_PROMPT,
@@ -53,7 +53,10 @@ async function routeProfile(
     const data = parseModelJson<{ profile?: string }>(text);
     const routed = normalizeItemProfile(data?.profile ?? "auto");
     return routed !== "auto" ? routed : "hard_goods";
-  } catch {
+  } catch (e) {
+    // Auth/billing failures must surface, not silently fall back to a profile.
+    const fatal = anthropicAuthError(e);
+    if (fatal) throw fatal;
     return "hard_goods";
   }
 }
@@ -139,6 +142,8 @@ export async function POST(req: NextRequest) {
         listing.item_profile = profile;
         return NextResponse.json({ ok: true, listing });
       } catch (err) {
+        const fatal = anthropicAuthError(err);
+        if (fatal) throw fatal; // auth/billing won't fix itself on retry
         lastErr = err;
         if (attempt < 2) {
           await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
@@ -147,6 +152,10 @@ export async function POST(req: NextRequest) {
     }
     throw lastErr;
   } catch (e) {
+    if (e instanceof AnthropicAuthError) {
+      console.error("[analyze] auth/billing failure:", e.message);
+      return NextResponse.json({ ok: false, error: e.message }, { status: e.status });
+    }
     return safeErrorResponse("analyze", e, "Something went wrong analyzing photos — please try again.");
   }
 }
