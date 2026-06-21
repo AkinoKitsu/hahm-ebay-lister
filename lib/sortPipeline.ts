@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { parseModelJson } from "@/lib/anthropic";
+import { anthropicAuthError, parseModelJson } from "@/lib/anthropic";
 import {
   buildSortPrompt,
   buildVerifyGroupPrompt,
@@ -75,6 +75,9 @@ async function claudeJson<T>(
         e && typeof e === "object" && "status" in e
           ? Number((e as { status?: number }).status)
           : undefined;
+      // Account-level failures won't fix themselves on retry — surface them.
+      const fatal = anthropicAuthError(e);
+      if (fatal) throw fatal;
       const retryable = status === undefined || RETRYABLE_STATUS.has(status);
       if (attempt < 3 && retryable) {
         const wait = Math.min(10000, 800 * 2 ** attempt) + Math.floor(Math.random() * 400);

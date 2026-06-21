@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getClient } from "@/lib/anthropic";
+import { getClient, AnthropicAuthError } from "@/lib/anthropic";
 import { guardApiRequest, safeErrorResponse } from "@/lib/api-guard";
 import { sortPhotos } from "@/lib/sortPipeline";
 import type { WireImage } from "@/lib/images";
@@ -51,6 +51,10 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
+    if (e instanceof AnthropicAuthError) {
+      console.error("[sort] auth/billing failure:", e.message);
+      return NextResponse.json({ ok: false, error: e.message }, { status: e.status });
+    }
     return safeErrorResponse("sort", e, "Sorting failed — please try again.");
   }
 }
