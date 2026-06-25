@@ -33,6 +33,34 @@ export function buildAuthorizeUrl(state: string): string {
   return `${EBAY_OAUTH_URL}?${params.toString()}`;
 }
 
+// Turn eBay's raw token-endpoint failure into an actionable message.
+// The two failures people actually hit are credential and code problems, and
+// eBay distinguishes them clearly enough to give a targeted hint:
+//   401 / invalid_client → the App ID + Cert ID pair was rejected. This is the
+//     first step that sends the Cert ID, so the consent screen having worked
+//     doesn't rule it out. Almost always a wrong/mis-pasted EBAY_CLIENT_SECRET,
+//     a Sandbox-vs-Production keyset mix-up, or env vars set but not redeployed.
+//   invalid_grant → the authorization code (or refresh token) itself is bad,
+//     expired, or already used — not a credentials problem.
+function tokenErrorMessage(status: number, body: string): string {
+  if (status === 401 || /invalid_client/i.test(body)) {
+    return (
+      "eBay rejected your app credentials (401 invalid_client). This is the App ID / " +
+      "Cert ID pair, not the authorization code you pasted. Check that EBAY_CLIENT_SECRET " +
+      "(Cert ID) and EBAY_CLIENT_ID (App ID) come from the same Production keyset — sandbox " +
+      "keys won't work — have no stray spaces or line breaks, and that you redeployed in " +
+      "Vercel after setting them."
+    );
+  }
+  if (/invalid_grant/i.test(body)) {
+    return (
+      "eBay rejected the authorization code (it may have expired or already been used). " +
+      "Start the connection again and paste the fresh URL right away."
+    );
+  }
+  return `eBay token request failed (${status}): ${body.slice(0, 300)}`;
+}
+
 async function postToken(
   creds: EbayCreds,
   body: Record<string, string>
@@ -47,7 +75,7 @@ async function postToken(
   });
   if (!resp.ok) {
     const text = await resp.text().catch(() => "");
-    throw new Error(`eBay token request failed (${resp.status}): ${text.slice(0, 300)}`);
+    throw new Error(tokenErrorMessage(resp.status, text));
   }
   return (await resp.json()) as TokenResponse;
 }
